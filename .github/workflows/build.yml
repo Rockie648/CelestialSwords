@@ -31,7 +31,8 @@ jobs:
         echo "Found JAR: $JAR_FILE"
 
     - name: Upload JAR
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4       # updated to v4
       with:
         name: plugin-jar
         path: ${{ env.JAR_PATH }}
+        # optionally you can set retention-days, compression-level etc.
