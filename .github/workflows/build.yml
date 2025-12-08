@@ -1,8 +1,9 @@
-name: Build Minecraft Plugin
+name: Build and Upload Plugin
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,8 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # Step 2: Set up
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build with Maven
+      run: mvn clean package
+
+    - name: Find JAR file
+      id: find-jar
+      run: |
+        JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -n 1)
+        echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
+        echo "Found JAR: $JAR_FILE"
+
+    - name: Upload JAR
+      uses: actions/upload-artifact@v3
+      with:
+        name: plugin-jar
+        path: ${{ env.JAR_PATH }}
