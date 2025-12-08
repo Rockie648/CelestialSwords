@@ -1,0 +1,6 @@
+name: CelestialSwords
+main: com.rockie.celestialswords.CelestialSwords
+version: 1.0
+api-version: 1.21
+author: Rockie
+description: Celestial Swords — Elemental chaos plugin
