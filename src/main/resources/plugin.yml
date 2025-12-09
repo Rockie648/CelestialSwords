@@ -1,16 +1,39 @@
-name: CelestialSwords
-main: com.rockie.celestialswords.CelestialSwords
-version: 1.0
-api-version: 1.20
-author: Rockie
+name: Build Celestial Swords
 
-commands:
-  celestial:
-    description: Gives all 3 Celestial Swords.
-    usage: /celestial [player]
-    permission: celestial.admin
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-permissions:
-  celestial.admin:
-    description: Allows using /celestial command
-    default: op
+jobs:
+  build:
+    name: Build JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CelestialSwords
+          path: target/*.jar
