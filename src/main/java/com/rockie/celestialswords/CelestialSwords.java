@@ -15,39 +15,36 @@ import java.util.List;
 
 public class CelestialSwords extends JavaPlugin {
 
-    @Override
-    public void onEnable() {
-        getLogger().info("Celestial Swords Plugin Enabled!");
-        // You can register events here if your abilities are event-based
-        getServer().getPluginManager().registerEvents(new SwordAbilities(), this);
+@Override
+public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    // ✅ Replace isOp() with a permission check
+    if (!sender.hasPermission("celestial.admin")) {
+        sender.sendMessage("§cYou must be an operator to use this command!");
+        return true;
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("celestial.admin")) {
-            sender.sendMessage("§cYou must be an operator to use this command!");
+    if (command.getName().equalsIgnoreCase("celestial")) {
+        // existing code to give swords
+        if (args.length == 0 && sender instanceof Player player) {
+            giveAllSwords(player);
             return true;
-        }
-
-        if (command.getName().equalsIgnoreCase("celestial")) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage("§cOnly players can receive swords!");
-                return true;
+        } else if (args.length == 1) {
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target != null) {
+                giveAllSwords(target);
+                sender.sendMessage("§aGiven all swords to " + target.getName());
+            } else {
+                sender.sendMessage("§cPlayer not found!");
             }
-
-            // Give all 3 swords
-            player.getInventory().addItem(createKurozai());
-            player.getInventory().addItem(createZanpakuto());
-            player.getInventory().addItem(createIceGlacial());
-
-            // Play a sound and send message
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-            player.sendMessage("§aYou received all 3 Celestial Swords!");
+            return true;
+        } else {
+            sender.sendMessage("§cUsage: /celestial [player]");
             return true;
         }
-
-        return false;
     }
+
+    return false;
+}
 
     // ⚔️ Kurozai
     private ItemStack createKurozai() {
