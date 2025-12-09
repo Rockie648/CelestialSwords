@@ -7,7 +7,7 @@ description: Celestial Swords — Elemental chaos plugin
 
 commands:
   celestial:
-    description: Gives all 3 Celestial Swords (OP only)
-    usage: /celestial
+    description: Gives Celestial Swords
+    usage: /celestial [player]
     permission: celestial.admin
     permission-message: "§cYou must be an operator to use this command!"
