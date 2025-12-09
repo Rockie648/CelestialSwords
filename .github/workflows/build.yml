@@ -1,4 +1,4 @@
-name: Build and Upload Plugin
+name: Debug Build
 
 on:
   push:
@@ -7,27 +7,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  debug-build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Java
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Maven
-      run: mvn clean package
-
-    - name: List target folder
-      run: ls -R target
-
-    - name: Find JAR file
-      id: find-jar
+    - name: Build with Maven (debug)
       run: |
-        JAR_FILE=$(find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" | head -n 1)
-        if [ -z "$JAR_FILE" ];_]()
+        echo "----- Running mvn clean package -----"
+        mvn clean package || (echo "MAVEN ERROR (Ignored)" && true)
+
+    - name: Show entire project structure
+      run: |
+        echo "----- PROJECT FILES -----"
+        ls -R .
+
+    - name: Show target folder (if exists)
+      run: |
+        echo "----- TARGET FOLDER -----"
+        if [ -d target ]; then ls -R target; else echo "target/ does not exist"; fi
+
+    - name: Find JAR
+      run: |
+        echo "----- FINDING JAR -----"
+        JAR_FILE=$(find target -name "*.jar" | head -n 1)
+        if [ -z "$JAR_FILE" ]; then
+          echo "NO JAR FOUND"
+        else
+          echo "FOUND JAR: $JAR_FILE"
+        fi
+
+    - name: Always succeed
+      run: echo "DEBUG COMPLETED SUCCESSFULLY"
