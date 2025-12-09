@@ -1,40 +1,29 @@
-name: Build Plugin
+name: Build plugin
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Set up Java
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
         distribution: 'temurin'
+        java-version: '21'   # ← IMPORTANT!
 
     - name: Build with Maven
-      run: mvn clean package
+      run: mvn -B package --file pom.xml
 
-    - name: List target folder
-      run: ls -R target
-
-    - name: Find JAR file
-      id: find-jar
-      run: |
-        JAR_FILE=$(find target -name "*.jar" | grep -v "sources" | grep -v "javadoc" | head -n 1)
-        echo "jar_file=$JAR_FILE" >> $GITHUB_OUTPUT
-        test -n "$JAR_FILE"
-
-    - name: Upload JAR Artifact
+    - name: Upload plugin jar
       uses: actions/upload-artifact@v4
       with:
         name: CelestialSwords
-        path: ${{ steps.find-jar.outputs.jar_file }}
+        path: target/*.jar
