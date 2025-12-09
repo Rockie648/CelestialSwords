@@ -1,51 +1,38 @@
-name: Build Celestial Swords Plugin
+name: Build CelestialSwords
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    name: Build JAR
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v3
         with:
-          java-version: 17
+          java-version: 21
           distribution: temurin
 
-      - name: Cache Maven packages
+      - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.m2/repository
+          path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: mvn clean package
 
-      - name: Extract plugin version
-        id: version
-        run: |
-          version=$(xmllint --xpath "string(//project/version)" pom.xml)
-          echo "PLUGIN_VERSION=$version" >> $GITHUB_ENV
-
-      - name: Rename JAR with version
-        run: |
-          mkdir -p target/release
-          mv target/*.jar target/release/CelestialSwords-${{ env.PLUGIN_VERSION }}.jar
-
-      - name: Upload JAR
-        uses: actions/upload-artifact@v4
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: CelestialSwords-${{ env.PLUGIN_VERSION }}
-          path: target/release/*.jar
+          name: CelestialSwords
+          path: target/CelestialSwords-1.0-SNAPSHOT.jar
