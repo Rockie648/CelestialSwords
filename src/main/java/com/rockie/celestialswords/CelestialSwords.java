@@ -1,13 +1,10 @@
 package com.rockie.celestialswords;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.Particle;
-import org.bukkit.block.Block;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
+import org.bukkit.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,49 +13,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CelestialSwords extends JavaPlugin {
+public class CelestialSwords extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        // register crafting recipes
+        getServer().getPluginManager().registerEvents(new SwordAbilities(this), this);
         registerRecipes();
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("celestial.admin")) {
-            sender.sendMessage("§cYou must be an operator to use this command!");
-            return true;
-        }
-
-        if (command.getName().equalsIgnoreCase("celestial")) {
-            if (args.length == 0 && sender instanceof Player player) {
-                giveAllSwords(player);
-                return true;
-            } else if (args.length == 1) {
-                Player target = Bukkit.getPlayer(args[0]);
-                if (target != null) {
-                    giveAllSwords(target);
-                    sender.sendMessage("§aGiven all swords to " + target.getName());
-                } else {
-                    sender.sendMessage("§cPlayer not found!");
-                }
-                return true;
-            } else {
-                sender.sendMessage("§cUsage: /celestial [player]");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void giveAllSwords(Player player) {
-        player.getInventory().addItem(createKurozai(), createZanpakuto(), createIceGlacial());
-        player.sendMessage("§aYou received all Celestial Swords!");
-    }
-
-    // ⚔️ Kurozai - Dark Vortex
-    private ItemStack createKurozai() {
+    // ===== Sword Creation =====
+    public ItemStack createKurozai() {
         ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§5Kurozai");
@@ -69,87 +33,87 @@ public class CelestialSwords extends JavaPlugin {
         return sword;
     }
 
-    // 🔥 Zanpakuto - Explosive Wave
-    private ItemStack createZanpakuto() {
+    public ItemStack createZanpakuto() {
         ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§cZanpakuto of Fire");
         List<String> lore = new ArrayList<>();
-        lore.add("§7Unleashes destructive explosions!");
+        lore.add("§7Unleashes fiery explosions!");
         meta.setLore(lore);
         sword.setItemMeta(meta);
         return sword;
     }
 
-    // ❄️ IceGlacial - Freeze Ground
-    private ItemStack createIceGlacial() {
+    public ItemStack createIceGlacial() {
         ItemStack sword = new ItemStack(Material.IRON_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§bIceGlacial");
         List<String> lore = new ArrayList<>();
-        lore.add("§7Freezes the land and slows mobs!");
+        lore.add("§7Freezes the land with icy spikes!");
         meta.setLore(lore);
         sword.setItemMeta(meta);
         return sword;
     }
 
-    // -----------------------
-    // Sword abilities (trigger via player interact)
-    // You need a listener class for right-click events
-    // -----------------------
+    // ===== Sword Abilities =====
     public void activateKurozai(Player player) {
-        player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 100, 1,1,1, 0.5);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_SCREAM, 2, 1);
+        Location loc = player.getLocation();
+        player.getWorld().spawnParticle(Particle.PORTAL, loc, 100, 1, 2, 1, 0.1);
+        player.getWorld().playSound(loc, Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 1f);
 
-        // Pull nearby entities
-        player.getWorld().getNearbyEntities(player.getLocation(), 5,5,5).forEach(e -> {
-            e.setVelocity(player.getLocation().toVector().subtract(e.getLocation().toVector()).normalize().multiply(1.5));
-        });
+        for (Entity e : player.getNearbyEntities(10, 10, 10)) {
+            if (e instanceof LivingEntity && !(e instanceof Player)) {
+                e.setVelocity(player.getLocation().toVector().subtract(e.getLocation().toVector()).normalize().multiply(2));
+            }
+        }
     }
 
     public void activateZanpakuto(Player player) {
-        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 200, 2,2,2, 0.5);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 2, 1);
+        Location loc = player.getLocation();
+        player.getWorld().spawnParticle(Particle.FLAME, loc, 50, 2, 2, 2, 0.2);
+        player.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1f, 1f);
 
-        // destructive explosion
-        player.getWorld().createExplosion(player.getLocation(), 4F, true, true);
+        for (Entity e : player.getNearbyEntities(5, 5, 5)) {
+            if (e instanceof LivingEntity && !(e instanceof Player)) {
+                ((LivingEntity) e).damage(8, player);
+            }
+        }
     }
 
     public void activateIceGlacial(Player player) {
-        player.getWorld().spawnParticle(Particle.SNOWBALL, player.getLocation(), 200, 2,2,2, 0.2);
-        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_SNOW_BREAK, 2, 1);
+        Location loc = player.getLocation();
+        player.getWorld().spawnParticle(Particle.SNOWBALL, loc, 50, 3, 1, 3, 0.2);
+        player.getWorld().playSound(loc, Sound.BLOCK_SNOW_BREAK, 1f, 1f);
 
-        // Freeze nearby blocks
-        player.getWorld().getNearbyEntities(player.getLocation(),5,2,5).forEach(e -> {
-            if (e instanceof Player p) {
-                p.setFreezeTicks(60); // slow/freeze effect
+        for (Entity e : player.getNearbyEntities(6, 2, 6)) {
+            if (e instanceof LivingEntity && !(e instanceof Player)) {
+                ((LivingEntity) e).setFreezeTicks(100); // Freeze mobs for 5 seconds
+                ((LivingEntity) e).setVelocity(((LivingEntity) e).getVelocity().multiply(0.1)); // slow
             }
-        });
-        player.getWorld().getNearbyBlocks(player.getLocation(),5,1,5).forEach(b -> {
-            if (b.getType() == Material.WATER) {
-                b.setType(Material.ICE);
-                // revert after 10 sec
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        b.setType(Material.WATER);
+        }
+
+        // Freeze ground blocks destructively (turn water to ice, lava to obsidian)
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (int x = -3; x <= 3; x++) {
+                    for (int z = -3; z <= 3; z++) {
+                        Location blockLoc = loc.clone().add(x, 0, z);
+                        if (blockLoc.getBlock().getType() == Material.WATER) blockLoc.getBlock().setType(Material.ICE);
+                        if (blockLoc.getBlock().getType() == Material.LAVA) blockLoc.getBlock().setType(Material.OBSIDIAN);
                     }
-                }.runTaskLater(this, 200L);
+                }
             }
-        });
+        }.runTask(this);
     }
 
-    // -----------------------
-    // Custom recipes
-    // -----------------------
+    // ===== Give Swords =====
+    public void giveAllSwords(Player player) {
+        player.getInventory().addItem(createKurozai(), createZanpakuto(), createIceGlacial());
+    }
+
+    // ===== Recipes Placeholder =====
     private void registerRecipes() {
-        // Example: Kurozai recipe
-        var kurozai = createKurozai();
-        var recipe = new org.bukkit.inventory.ShapedRecipe(kurozai);
-        recipe.shape("DED"," E "," S ");
-        recipe.setIngredient('D', Material.DRAGON_EGG);
-        recipe.setIngredient('E', Material.NETHERITE_BLOCK);
-        recipe.setIngredient('S', Material.STICK);
-        Bukkit.addRecipe(recipe);
+        // You can add custom recipes here later
     }
 }
