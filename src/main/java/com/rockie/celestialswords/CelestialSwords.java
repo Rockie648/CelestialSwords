@@ -2,49 +2,70 @@ package com.rockie.celestialswords;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.NamespacedKey;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CelestialSwords extends JavaPlugin {
+public class CelestialSwords extends JavaPlugin implements Listener {
 
-@Override
-public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    // ✅ Replace isOp() with a permission check
-    if (!sender.hasPermission("celestial.admin")) {
-        sender.sendMessage("§cYou must be an operator to use this command!");
-        return true;
+    @Override
+    public void onEnable() {
+        getLogger().info("Celestial Swords Enabled!");
+        getServer().getPluginManager().registerEvents(this, this);
+        addCustomRecipes();
     }
 
-    if (command.getName().equalsIgnoreCase("celestial")) {
-        // existing code to give swords
-        if (args.length == 0 && sender instanceof Player player) {
-            giveAllSwords(player);
-            return true;
-        } else if (args.length == 1) {
-            Player target = Bukkit.getPlayer(args[0]);
-            if (target != null) {
-                giveAllSwords(target);
-                sender.sendMessage("§aGiven all swords to " + target.getName());
-            } else {
-                sender.sendMessage("§cPlayer not found!");
-            }
-            return true;
-        } else {
-            sender.sendMessage("§cUsage: /celestial [player]");
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // OP-only
+        if (!sender.isOp()) {
+            sender.sendMessage("§cOnly operators can use this command!");
             return true;
         }
+
+        if (command.getName().equalsIgnoreCase("celestial")) {
+            if (args.length == 1 && args[0].equalsIgnoreCase("getall")) {
+                if (sender instanceof Player player) {
+                    giveAllSwords(player);
+                    sender.sendMessage("§aAll Celestial Swords added to your inventory!");
+                } else {
+                    sender.sendMessage("§cOnly players can run this command!");
+                }
+                return true;
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target != null) {
+                    giveAllSwords(target);
+                    sender.sendMessage("§aAll Celestial Swords given to " + target.getName());
+                } else {
+                    sender.sendMessage("§cPlayer not found!");
+                }
+                return true;
+            } else {
+                sender.sendMessage("§cUsage: /celestial getall OR /celestial give <player>");
+                return true;
+            }
+        }
+        return false;
     }
 
-    return false;
-}
+    private void giveAllSwords(Player player) {
+        player.getInventory().addItem(createKurozai(), createZanpakuto(), createIceGlacial());
+    }
 
     // ⚔️ Kurozai
     private ItemStack createKurozai() {
@@ -63,22 +84,4 @@ public boolean onCommand(CommandSender sender, Command command, String label, St
         ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§cZanpakuto of Fire");
-        List<String> lore = new ArrayList<>();
-        lore.add("§7Unleashes fiery explosions!");
-        meta.setLore(lore);
-        sword.setItemMeta(meta);
-        return sword;
-    }
-
-    // ❄️ IceGlacial
-    private ItemStack createIceGlacial() {
-        ItemStack sword = new ItemStack(Material.IRON_SWORD);
-        ItemMeta meta = sword.getItemMeta();
-        meta.setDisplayName("§bIceGlacial");
-        List<String> lore = new ArrayList<>();
-        lore.add("§7Freezes the land with icy spikes!");
-        meta.setLore(lore);
-        sword.setItemMeta(meta);
-        return sword;
-    }
-}
+        List<String
