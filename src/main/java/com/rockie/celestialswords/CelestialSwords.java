@@ -80,3 +80,18 @@ public class CelestialSwords extends JavaPlugin {
         lore.add("§7Unleashes fiery explosions!");
         meta.setLore(lore);
         sword.setItemMeta(meta);
+        return sword;
+    }
+
+    // ❄️ IceGlacial
+    private ItemStack createIceGlacial() {
+        ItemStack sword = new ItemStack(Material.IRON_SWORD);
+        ItemMeta meta = sword.getItemMeta();
+        meta.setDisplayName("§bIceGlacial");
+        List<String> lore = new ArrayList<>();
+        lore.add("§7Freezes the land with icy spikes!");
+        meta.setLore(lore);
+        sword.setItemMeta(meta);
+        return sword;
+    }
+}
