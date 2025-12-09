@@ -1,4 +1,4 @@
-name: Debug Build
+name: Build Plugin
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  debug-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,30 +20,21 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Maven (debug)
-      run: |
-        echo "----- Running mvn clean package -----"
-        mvn clean package || (echo "MAVEN ERROR (Ignored)" && true)
+    - name: Build with Maven
+      run: mvn clean package
 
-    - name: Show entire project structure
-      run: |
-        echo "----- PROJECT FILES -----"
-        ls -R .
+    - name: List target folder
+      run: ls -R target
 
-    - name: Show target folder (if exists)
+    - name: Find JAR file
+      id: find-jar
       run: |
-        echo "----- TARGET FOLDER -----"
-        if [ -d target ]; then ls -R target; else echo "target/ does not exist"; fi
+        JAR_FILE=$(find target -name "*.jar" | grep -v "sources" | grep -v "javadoc" | head -n 1)
+        echo "jar_file=$JAR_FILE" >> $GITHUB_OUTPUT
+        test -n "$JAR_FILE"
 
-    - name: Find JAR
-      run: |
-        echo "----- FINDING JAR -----"
-        JAR_FILE=$(find target -name "*.jar" | head -n 1)
-        if [ -z "$JAR_FILE" ]; then
-          echo "NO JAR FOUND"
-        else
-          echo "FOUND JAR: $JAR_FILE"
-        fi
-
-    - name: Always succeed
-      run: echo "DEBUG COMPLETED SUCCESSFULLY"
+    - name: Upload JAR Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CelestialSwords
+        path: ${{ steps.find-jar.outputs.jar_file }}
