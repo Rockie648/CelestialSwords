@@ -2,14 +2,14 @@ package com.rockie.celestialswords;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,24 +18,18 @@ import java.util.List;
 
 public class CelestialSwords extends JavaPlugin implements Listener {
 
-    private SwordAbilities abilities;
-
     @Override
     public void onEnable() {
-        abilities = new SwordAbilities(this);
-        Bukkit.getPluginManager().registerEvents(this, this);
-        getLogger().info("CelestialSwords enabled!");
+        // Register events
+        getServer().getPluginManager().registerEvents(new SwordAbilities(this), this);
+
+        // Add custom recipes
+        addRecipes();
     }
 
-    @Override
-    public void onDisable() {
-        getLogger().info("CelestialSwords disabled!");
-    }
-
-    // ----------------- Command to give swords -----------------
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("celestial.admin")) {
+        if (!sender.isOp()) {
             sender.sendMessage("§cYou must be an operator to use this command!");
             return true;
         }
@@ -44,8 +38,8 @@ public class CelestialSwords extends JavaPlugin implements Listener {
             if (args.length == 0 && sender instanceof Player player) {
                 giveAllSwords(player);
                 return true;
-            } else if (args.length == 1) {
-                Player target = Bukkit.getPlayer(args[0]);
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("get")) {
+                Player target = Bukkit.getPlayer(args[1]);
                 if (target != null) {
                     giveAllSwords(target);
                     sender.sendMessage("§aGiven all swords to " + target.getName());
@@ -54,31 +48,22 @@ public class CelestialSwords extends JavaPlugin implements Listener {
                 }
                 return true;
             } else {
-                sender.sendMessage("§cUsage: /celestial [player]");
+                sender.sendMessage("§cUsage: /celestial [get player]");
                 return true;
             }
         }
         return false;
     }
 
-    // ----------------- Right-click event to trigger abilities -----------------
-    @EventHandler
-    public void onPlayerUse(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = event.getItem();
-        if (item == null || !item.hasItemMeta()) return;
-
-        String name = item.getItemMeta().getDisplayName();
-
-        switch (name) {
-            case "§5Kurozai" -> abilities.activateKurozai(player);
-            case "§cZanpakuto of Fire" -> abilities.activateZanpakuto(player);
-            case "§bIceGlacial" -> abilities.activateIceGlacial(player);
-        }
+    public void giveAllSwords(Player player) {
+        player.getInventory().addItem(createKurozai());
+        player.getInventory().addItem(createZanpakuto());
+        player.getInventory().addItem(createIceGlacial());
+        player.sendMessage("§aYou have received all Celestial Swords!");
     }
 
-    // ----------------- Sword creation methods -----------------
-    private ItemStack createKurozai() {
+    // ⚔️ Kurozai
+    public ItemStack createKurozai() {
         ItemStack sword = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§5Kurozai");
@@ -89,7 +74,8 @@ public class CelestialSwords extends JavaPlugin implements Listener {
         return sword;
     }
 
-    private ItemStack createZanpakuto() {
+    // 🔥 Zanpakuto
+    public ItemStack createZanpakuto() {
         ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§cZanpakuto of Fire");
@@ -100,22 +86,40 @@ public class CelestialSwords extends JavaPlugin implements Listener {
         return sword;
     }
 
-    private ItemStack createIceGlacial() {
+    // ❄️ IceGlacial
+    public ItemStack createIceGlacial() {
         ItemStack sword = new ItemStack(Material.IRON_SWORD);
         ItemMeta meta = sword.getItemMeta();
         meta.setDisplayName("§bIceGlacial");
         List<String> lore = new ArrayList<>();
-        lore.add("§7Freezes the land with icy spikes!");
+        lore.add("§7Freezes the land and slows mobs!");
         meta.setLore(lore);
         sword.setItemMeta(meta);
         return sword;
     }
 
-    // ----------------- Give all swords to player -----------------
-    private void giveAllSwords(Player player) {
-        player.getInventory().addItem(createKurozai());
-        player.getInventory().addItem(createZanpakuto());
-        player.getInventory().addItem(createIceGlacial());
-        player.sendMessage("§aYou received all Celestial Swords!");
+    private void addRecipes() {
+        // Kurozai Recipe
+        ShapedRecipe kurozaiRecipe = new ShapedRecipe(new NamespacedKey(this, "kurozai"), createKurozai());
+        kurozaiRecipe.shape("DED", "ES ", " S ");
+        kurozaiRecipe.setIngredient('D', Material.DRAGON_EGG);
+        kurozaiRecipe.setIngredient('E', Material.NETHERITE_BLOCK);
+        kurozaiRecipe.setIngredient('S', Material.STICK);
+
+        getServer().addRecipe(kurozaiRecipe);
+
+        // Zanpakuto Recipe
+        ShapedRecipe zanpakutoRecipe = new ShapedRecipe(new NamespacedKey(this, "zanpakuto"), createZanpakuto());
+        zanpakutoRecipe.shape("F F", " F ", " S ");
+        zanpakutoRecipe.setIngredient('F', Material.BLAZE_POWDER);
+        zanpakutoRecipe.setIngredient('S', Material.STICK);
+        getServer().addRecipe(zanpakutoRecipe);
+
+        // IceGlacial Recipe
+        ShapedRecipe iceRecipe = new ShapedRecipe(new NamespacedKey(this, "iceglacial"), createIceGlacial());
+        iceRecipe.shape("S S", " W ", " S ");
+        iceRecipe.setIngredient('S', Material.SNOW_BLOCK);
+        iceRecipe.setIngredient('W', Material.BLUE_ICE);
+        getServer().addRecipe(iceRecipe);
     }
 }
