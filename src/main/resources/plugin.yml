@@ -1,13 +1,16 @@
 name: CelestialSwords
 main: com.rockie.celestialswords.CelestialSwords
 version: 1.0
-api-version: 1.21
+api-version: 1.20
 author: Rockie
-description: Celestial Swords — Elemental chaos plugin
 
 commands:
   celestial:
-    description: Gives Celestial Swords
+    description: Gives all 3 Celestial Swords.
     usage: /celestial [player]
     permission: celestial.admin
-    permission-message: "§cYou must be an operator to use this command!"
+
+permissions:
+  celestial.admin:
+    description: Allows using /celestial command
+    default: op
